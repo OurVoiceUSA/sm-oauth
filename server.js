@@ -17,7 +17,7 @@ const ovi_config = {
   redis_port: ( process.env.REDIS_PORT ? process.env.REDIS_PORT : 6379 ),
   session_secret: ( process.env.SESSION_SECRET ? process.env.SESSION_SECRET : crypto.randomBytes(48).toString('hex') ),
   jwt_secret: ( process.env.JWS_SECRET ? process.env.JWS_SECRET : crypto.randomBytes(48).toString('hex') ),
-  jwt_iss: ( process.env.JWS_ISS ? process.env.JWS_ISS : 'ourvoiceusa.org' ),
+  jwt_iss: ( process.env.JWS_ISS ? process.env.JWS_ISS : 'example.com' ),
   DEBUG: ( process.env.DEBUG ? process.env.DEBUG : false ),
 };
 

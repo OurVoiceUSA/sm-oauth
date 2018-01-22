@@ -147,7 +147,6 @@ app.use(expressSession({
 
 // Initialize Passport
 app.use(passport.initialize());
-//app.use(passport.session());
 
 // require ip_header if config for it is set
 if (!ovi_config.DEBUG) {

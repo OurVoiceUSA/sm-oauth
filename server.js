@@ -119,7 +119,6 @@ function oauthredir(req, res, type) {
   req.user.sub = req.user.id; // the jwt "subject" is the userid
   var u = JSON.stringify(req.user);
   rc.lpush('jwt:'+req.user.id, u);
-  rc.hmset('user:'+req.user.id, 'name', req.user.name, 'email', req.user.email, 'avatar', req.user.avatar);
   wslog(req, 'oauthredir', {user_id: req.user.id, type: type});
   return u;
 }

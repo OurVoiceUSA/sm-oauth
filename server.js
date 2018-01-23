@@ -18,7 +18,7 @@ const ovi_config = {
   session_secret: ( process.env.SESSION_SECRET ? process.env.SESSION_SECRET : crypto.randomBytes(48).toString('hex') ),
   jwt_secret: ( process.env.JWS_SECRET ? process.env.JWS_SECRET : crypto.randomBytes(48).toString('hex') ),
   jwt_iss: ( process.env.JWS_ISS ? process.env.JWS_ISS : 'example.com' ),
-  DEBUG: ( process.env.DEBUG ? process.env.DEBUG : false ),
+  DEBUG: ( process.env.DEBUG ? true : false ),
 };
 
 const passport_facebook = {

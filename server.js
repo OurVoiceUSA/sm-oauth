@@ -103,7 +103,7 @@ function getClientIP(req) {
 }
 
 function wslog(req, ws, log) {
-  log['client-ip'] = getClientIP(req);
+  log['client_ip'] = getClientIP(req);
   log['time'] = (new Date).getTime();
   let str = JSON.stringify(log);
   if (ovi_config.DEBUG) console.log('DEBUG: '+ws+': '+str);

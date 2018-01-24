@@ -11,6 +11,7 @@ import FacebookStrategy from 'passport-facebook';
 import GoogleStrategy from 'passport-google-oauth20';
 
 const ovi_config = {
+  server_port: ( process.env.SERVER_PORT ? process.env.SERVER_PORT : 8080 ),
   wsbase: ( process.env.WSBASE ? process.env.WSBASE : 'http://localhost:8080' ),
   ip_header: ( process.env.CLIENT_IP_HEADER ? process.env.CLIENT_IP_HEADER : null ),
   redis_host: ( process.env.REDIS_HOST ? process.env.REDIS_HOST : 'localhost' ),
@@ -172,7 +173,7 @@ app.get('/auth/fm/callback', passport.authenticate('facebook', { callbackURL: ov
 app.get('/auth/gm/callback', passport.authenticate('google',   { callbackURL: ovi_config.wsbase+'/auth/gm/callback', failureRedirect: '/auth/gm' }), moauthredir);
 
 // Launch the server
-const server = app.listen(8080, () => {
+const server = app.listen(ovi_config.server_port, () => {
   const { address, port } = server.address();
   console.log('sm-oauth express');
   console.log(`Listening at http://${address}:${port}`);

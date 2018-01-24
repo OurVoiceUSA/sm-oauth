@@ -6,6 +6,7 @@ import crypto from 'crypto';
 import logger from 'logops';
 import redis from 'redis';
 import jwt from 'jsonwebtoken';
+import bodyParser from 'body-parser';
 import passport from 'passport';
 import FacebookStrategy from 'passport-facebook';
 import GoogleStrategy from 'passport-google-oauth20';
@@ -19,6 +20,7 @@ const ovi_config = {
   session_secret: ( process.env.SESSION_SECRET ? process.env.SESSION_SECRET : crypto.randomBytes(48).toString('hex') ),
   jwt_secret: ( process.env.JWS_SECRET ? process.env.JWS_SECRET : crypto.randomBytes(48).toString('hex') ),
   jwt_iss: ( process.env.JWS_ISS ? process.env.JWS_ISS : 'example.com' ),
+  token_disclaimer: ( process.env.TOKEN_DISCLAIMER ? process.env.TOKEN_DISCLAIMER : missingConfig("TOKEN_DISCLAIMER") ),
   DEBUG: ( process.env.DEBUG ? true : false ),
 };
 
@@ -46,6 +48,7 @@ const transformFacebookProfile = (profile) => ({
   iss: ovi_config.jwt_iss,
   iat: Math.floor(new Date().getTime() / 1000),
   exp: Math.floor(new Date().getTime() / 1000)+604800,
+  disclaimer: ovi_config.token_disclaimer,
 });
 
 // Transform Google profile into user object
@@ -57,6 +60,7 @@ const transformGoogleProfile = (profile) => ({
   iss: ovi_config.jwt_iss,
   iat: Math.floor(new Date().getTime() / 1000),
   exp: Math.floor(new Date().getTime() / 1000)+604800,
+  disclaimer: ovi_config.token_disclaimer,
 });
 
 // Register Facebook Passport strategy
@@ -129,6 +133,19 @@ function moauthredir(req, res) {
   res.redirect('OurVoiceApp://login?jwt=' + jwt.sign(u, ovi_config.jwt_secret));
 }
 
+function issueJWT(req, res) {
+  if (!req.body.apiKey) return res.sendStatus(401);
+  if (req.body.apiKey.length < 8 || req.body.apiKey.length > 64) return res.sendStatus(400);
+  if (!req.body.apiKey.match(/^[a-zA-Z0-9\-]+$/)) return res.sendStatus(400);
+  res.send({jwt: jwt.sign(JSON.stringify({
+    sub: req.body.apiKey,
+    iss: ovi_config.jwt_iss,
+    iat: Math.floor(new Date().getTime() / 1000),
+    exp: Math.floor(new Date().getTime() / 1000)+60,
+    disclaimer: ovi_config.token_disclaimer,
+  }), ovi_config.jwt_secret)});
+}
+
 function poke(req, res) {
   if (rc.connected)
     return res.sendStatus(200);
@@ -138,6 +155,7 @@ function poke(req, res) {
 // Initialize http server
 var connectRedis = require('connect-redis')(expressSession);
 const app = express();
+app.disable('x-powered-by');
 app.use(expressLogging(logger));
 app.use(expressSession({
     store: new connectRedis({client: rc}),
@@ -145,6 +163,7 @@ app.use(expressSession({
     saveUninitialized: false,
     resave: false
 }));
+app.use(bodyParser.json());
 
 // Initialize Passport
 app.use(passport.initialize());
@@ -164,6 +183,7 @@ if (!ovi_config.DEBUG && ovi_config.ip_header) {
 app.get('/poke', poke);
 
 // Set up auth routes
+app.post('/auth/jwt', issueJWT);
 app.get('/auth/fm', passport.authenticate('facebook', { callbackURL: ovi_config.wsbase+'/auth/fm/callback', scope: ['email']} ));
 // google accepts the custom loginHint
 app.get('/auth/gm', function(req, res, next) {

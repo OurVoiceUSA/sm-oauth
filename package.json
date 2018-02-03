@@ -7,8 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node_modules/nodemon/bin/nodemon.js -- node_modules/babel-cli/bin/babel-node.js server.js"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Our Voice USA",
+  "license": "AGPL-3.0",
   "devDependencies": {
     "babel": "^6.23.0",
     "babel-cli": "^6.26.0",

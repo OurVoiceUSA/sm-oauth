@@ -137,6 +137,7 @@ function issueJWT(req, res) {
   if (!req.body.apiKey) return res.sendStatus(401);
   if (req.body.apiKey.length < 8 || req.body.apiKey.length > 64) return res.sendStatus(400);
   if (!req.body.apiKey.match(/^[a-zA-Z0-9\-]+$/)) return res.sendStatus(400);
+  wslog(req, 'jwt', {apiKey: req.body.apiKey});
   res.send({jwt: jwt.sign(JSON.stringify({
     sub: req.body.apiKey,
     iss: ovi_config.jwt_iss,

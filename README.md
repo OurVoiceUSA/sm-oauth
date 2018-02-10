@@ -18,6 +18,8 @@ Start by configuring the `.env` file:
     export OAUTH_FACEBOOK_SECRET=<YOUR SECRET>
     export OAUTH_GOOGLE_CLIENTID=<YOUR ID>
     export OAUTH_GOOGLE_SECRET=<YOUR SECRET>
+    export OAUTH_DROPBOX_CLIENTID=<YOUR ID>
+    export OAUTH_DROPBOX_SECRET=<YOUR SECRET>
     export TOKEN_DISCLAIMER="Link to your website terms of use here"
     export DEBUG=1
     EOF

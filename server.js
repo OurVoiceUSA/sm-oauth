@@ -206,13 +206,13 @@ app.get('/poke', poke);
 
 // Set up auth routes
 app.post('/auth/jwt', issueJWT);
-app.get('/auth/db', passport.authenticate('dropbox-oauth2', { callbackURL: ovi_config.wsbase+'/auth/db/callback' }));
+app.get('/auth/dm', passport.authenticate('dropbox-oauth2', { callbackURL: ovi_config.wsbase+'/auth/dm/callback' }));
 app.get('/auth/fm', passport.authenticate('facebook', { callbackURL: ovi_config.wsbase+'/auth/fm/callback', scope: ['email']} ));
 // google accepts the custom loginHint
 app.get('/auth/gm', function(req, res, next) {
   passport.authenticate('google', { loginHint: req.query.loginHint, callbackURL: ovi_config.wsbase+'/auth/gm/callback', scope: ['profile', 'email'] }
   )(req, res, next)});
-app.get('/auth/db/callback', passport.authenticate('dropbox-oauth2', { callbackURL: ovi_config.wsbase+'/auth/db/callback' }), dboxoauth);
+app.get('/auth/dm/callback', passport.authenticate('dropbox-oauth2', { callbackURL: ovi_config.wsbase+'/auth/dm/callback' }), dboxoauth);
 app.get('/auth/fm/callback', passport.authenticate('facebook', { callbackURL: ovi_config.wsbase+'/auth/fm/callback', failureRedirect: '/auth/fm' }), moauthredir);
 app.get('/auth/gm/callback', passport.authenticate('google',   { callbackURL: ovi_config.wsbase+'/auth/gm/callback', failureRedirect: '/auth/gm' }), moauthredir);
 

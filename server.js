@@ -2,6 +2,7 @@
 import express from 'express';
 import expressLogging from 'express-logging';
 import expressSession from 'express-session';
+import cors from 'cors';
 import crypto from 'crypto';
 import logger from 'logops';
 import redis from 'redis';
@@ -190,6 +191,7 @@ app.use(expressSession({
     resave: false
 }));
 app.use(bodyParser.json());
+app.use(cors());
 
 // Initialize Passport
 app.use(passport.initialize());

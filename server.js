@@ -155,9 +155,11 @@ function dboxoauth(req, res) {
   res.redirect('OurVoiceApp://login?dropbox=' + jwt.sign(req.user, ovi_config.jwt_secret));
 }
 
+/*
 function dboxweboauth(req, res) {
   res.redirect(req.session.returnTo + '?dropbox=' + jwt.sign(req.user, ovi_config.jwt_secret));
 }
+*/
 
 function issueJWT(req, res) {
   if (!req.body.apiKey) return res.sendStatus(401);
@@ -209,7 +211,6 @@ if (!ovi_config.DEBUG && ovi_config.ip_header) {
 
 // store return URL in session
 app.use(function (req, res, next) {
-  if (req.query.returnTo) req.session.returnTo = req.query.returnTo;
   return next();
 });
 
@@ -226,7 +227,7 @@ app.get('/auth/gm', function(req, res, next) {
   passport.authenticate('google', { loginHint: req.query.loginHint, callbackURL: ovi_config.wsbase+'/auth/gm/callback', scope: ['profile', 'email'] }
   )(req, res, next)});
 app.get('/auth/dm/callback', passport.authenticate('dropbox-oauth2', { callbackURL: ovi_config.wsbase+'/auth/dm/callback' }), dboxoauth);
-app.get('/auth/dw/callback', passport.authenticate('dropbox-oauth2', { callbackURL: ovi_config.wsbase+'/auth/dw/callback' }), dboxweboauth);
+//app.get('/auth/dw/callback', passport.authenticate('dropbox-oauth2', { callbackURL: ovi_config.wsbase+'/auth/dw/callback' }), dboxweboauth);
 app.get('/auth/fm/callback', passport.authenticate('facebook', { callbackURL: ovi_config.wsbase+'/auth/fm/callback', failureRedirect: '/auth/fm' }), moauthredir);
 app.get('/auth/gm/callback', passport.authenticate('google',   { callbackURL: ovi_config.wsbase+'/auth/gm/callback', failureRedirect: '/auth/gm' }), moauthredir);
 

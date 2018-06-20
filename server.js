@@ -3,6 +3,7 @@ import express from 'express';
 import expressLogging from 'express-logging';
 import expressSession from 'express-session';
 import cors from 'cors';
+import fs from 'fs';
 import crypto from 'crypto';
 import logger from 'logops';
 import redis from 'redis';
@@ -20,11 +21,13 @@ const ovi_config = {
   redis_host: ( process.env.REDIS_HOST ? process.env.REDIS_HOST : 'localhost' ),
   redis_port: ( process.env.REDIS_PORT ? process.env.REDIS_PORT : 6379 ),
   session_secret: ( process.env.SESSION_SECRET ? process.env.SESSION_SECRET : crypto.randomBytes(48).toString('hex') ),
-  jwt_secret: ( process.env.JWS_SECRET ? process.env.JWS_SECRET : crypto.randomBytes(48).toString('hex') ),
-  jwt_iss: ( process.env.JWS_ISS ? process.env.JWS_ISS : 'example.com' ),
+  jwt_prv_key: ( process.env.JWT_PRV_KEY ? process.env.JWT_PRV_KEY : missingConfig("JWT_PRV_KEY") ),
+  jwt_iss: ( process.env.JWT_ISS ? process.env.JWT_ISS : 'example.com' ),
   token_disclaimer: ( process.env.TOKEN_DISCLAIMER ? process.env.TOKEN_DISCLAIMER : missingConfig("TOKEN_DISCLAIMER") ),
   DEBUG: ( process.env.DEBUG ? true : false ),
 };
+
+var private_key = fs.readFileSync(ovi_config.jwt_prv_key);
 
 const passport_facebook = {
   clientID: ( process.env.OAUTH_FACEBOOK_CLIENTID ? process.env.OAUTH_FACEBOOK_CLIENTID : missingConfig("OAUTH_FACEBOOK_CLIENTID") ),
@@ -172,7 +175,7 @@ function issueJWT(req, res) {
     iat: Math.floor(new Date().getTime() / 1000),
     exp: Math.floor(new Date().getTime() / 1000)+60,
     disclaimer: ovi_config.token_disclaimer,
-  }), ovi_config.jwt_secret)});
+  }), private_key, {algorithm: 'RS256'})});
 }
 
 function poke(req, res) {

@@ -151,16 +151,16 @@ function oauthredir(req, res, type) {
 
 function moauthredir(req, res) {
   var u = oauthredir(req, res, 'mobile');
-  res.redirect('OurVoiceApp://login?jwt=' + jwt.sign(u, ovi_config.jwt_secret));
+  res.redirect('OurVoiceApp://login?jwt=' + jwt.sign(u, private_key, {algorithm: 'RS256'}));
 }
 
 function dboxoauth(req, res) {
-  res.redirect('OurVoiceApp://login?dropbox=' + jwt.sign(req.user, ovi_config.jwt_secret));
+  res.redirect('OurVoiceApp://login?dropbox=' + jwt.sign(req.user, private_key, {algorithm: 'RS256'}));
 }
 
 /*
 function dboxweboauth(req, res) {
-  res.redirect(req.session.returnTo + '?dropbox=' + jwt.sign(req.user, ovi_config.jwt_secret));
+  res.redirect(req.session.returnTo + '?dropbox=' + jwt.sign(req.user, private_key, {algorithm: 'RS256'}));
 }
 */
 

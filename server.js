@@ -21,12 +21,14 @@ const ovi_config = {
   redis_host: ( process.env.REDIS_HOST ? process.env.REDIS_HOST : 'localhost' ),
   redis_port: ( process.env.REDIS_PORT ? process.env.REDIS_PORT : 6379 ),
   session_secret: ( process.env.SESSION_SECRET ? process.env.SESSION_SECRET : crypto.randomBytes(48).toString('hex') ),
+  jwt_pub_key: ( process.env.JWT_PUB_KEY ? process.env.JWT_PUB_KEY : missingConfig("JWT_PUB_KEY") ),
   jwt_prv_key: ( process.env.JWT_PRV_KEY ? process.env.JWT_PRV_KEY : missingConfig("JWT_PRV_KEY") ),
   jwt_iss: ( process.env.JWT_ISS ? process.env.JWT_ISS : 'example.com' ),
   token_disclaimer: ( process.env.TOKEN_DISCLAIMER ? process.env.TOKEN_DISCLAIMER : missingConfig("TOKEN_DISCLAIMER") ),
   DEBUG: ( process.env.DEBUG ? true : false ),
 };
 
+var public_key = fs.readFileSync(ovi_config.jwt_pub_key);
 var private_key = fs.readFileSync(ovi_config.jwt_prv_key);
 
 const passport_facebook = {
@@ -178,6 +180,10 @@ function issueJWT(req, res) {
   }), private_key, {algorithm: 'RS256'})});
 }
 
+function pubkey(req, res) {
+  res.send(public_key);
+}
+
 function poke(req, res) {
   if (rc.connected)
     return res.sendStatus(200);
@@ -222,6 +228,7 @@ app.get('/poke', poke);
 
 // Set up auth routes
 app.post('/auth/jwt', issueJWT);
+app.get('/auth/pubkey', pubkey);
 app.get('/auth/dm', passport.authenticate('dropbox-oauth2', { callbackURL: ovi_config.wsbase+'/auth/dm/callback' }));
 app.get('/auth/dw', passport.authenticate('dropbox-oauth2', { callbackURL: ovi_config.wsbase+'/auth/dw/callback' }));
 app.get('/auth/fm', passport.authenticate('facebook', { callbackURL: ovi_config.wsbase+'/auth/fm/callback', scope: ['email']} ));

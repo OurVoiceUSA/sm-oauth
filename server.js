@@ -24,6 +24,7 @@ const ovi_config = {
   jwt_pub_key: ( process.env.JWT_PUB_KEY ? process.env.JWT_PUB_KEY : missingConfig("JWT_PUB_KEY") ),
   jwt_prv_key: ( process.env.JWT_PRV_KEY ? process.env.JWT_PRV_KEY : missingConfig("JWT_PRV_KEY") ),
   jwt_iss: ( process.env.JWT_ISS ? process.env.JWT_ISS : 'example.com' ),
+  jwt_token_test: ( process.env.JWT_TOKEN_TEST ? true : false ),
   token_disclaimer: ( process.env.TOKEN_DISCLAIMER ? process.env.TOKEN_DISCLAIMER : missingConfig("TOKEN_DISCLAIMER") ),
   DEBUG: ( process.env.DEBUG ? true : false ),
 };
@@ -184,6 +185,18 @@ function pubkey(req, res) {
   res.send(public_key);
 }
 
+function tokentest(req, res) {
+  let id = Math.random()*10000;
+  res.send({jwt: jwt.sign(JSON.stringify({
+    id: 'test:' + id,
+    name: "Test User "+id,
+    iss: ovi_config.jwt_iss,
+    iat: Math.floor(new Date().getTime() / 1000),
+    exp: Math.floor(new Date().getTime() / 1000)+604800,
+    disclaimer: ovi_config.token_disclaimer,
+  }), private_key, {algorithm: 'RS256'})});
+}
+
 function poke(req, res) {
   if (rc.connected)
     return res.sendStatus(200);
@@ -240,6 +253,8 @@ app.get('/auth/dm/callback', passport.authenticate('dropbox-oauth2', { callbackU
 //app.get('/auth/dw/callback', passport.authenticate('dropbox-oauth2', { callbackURL: ovi_config.wsbase+'/auth/dw/callback' }), dboxweboauth);
 app.get('/auth/fm/callback', passport.authenticate('facebook', { callbackURL: ovi_config.wsbase+'/auth/fm/callback', failureRedirect: '/auth/fm' }), moauthredir);
 app.get('/auth/gm/callback', passport.authenticate('google',   { callbackURL: ovi_config.wsbase+'/auth/gm/callback', failureRedirect: '/auth/gm' }), moauthredir);
+if (ovi_config.jwt_token_test === true)
+  app.get('/auth/tokentest', tokentest);
 
 // Launch the server
 const server = app.listen(ovi_config.server_port, () => {

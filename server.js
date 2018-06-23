@@ -186,7 +186,7 @@ function pubkey(req, res) {
 }
 
 function tokentest(req, res) {
-  let id = Math.random()*10000;
+  let id = Math.ceil(Math.random()*10000000);
   res.send({jwt: jwt.sign(JSON.stringify({
     id: 'test:' + id,
     name: "Test User "+id,

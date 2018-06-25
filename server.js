@@ -32,6 +32,9 @@ const ovi_config = {
 var public_key = fs.readFileSync(ovi_config.jwt_pub_key);
 var private_key = fs.readFileSync(ovi_config.jwt_prv_key);
 
+// verify public and private keys match
+jwt.verify(jwt.sign({test: true}, private_key, {algorithm: 'RS256'}), public_key);
+
 const passport_facebook = {
   clientID: ( process.env.OAUTH_FACEBOOK_CLIENTID ? process.env.OAUTH_FACEBOOK_CLIENTID : missingConfig("OAUTH_FACEBOOK_CLIENTID") ),
   clientSecret: ( process.env.OAUTH_FACEBOOK_SECRET ? process.env.OAUTH_FACEBOOK_SECRET : missingConfig("OAUTH_FACEBOOK_SECRET") ),

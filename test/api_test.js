@@ -83,6 +83,7 @@ describe('API smoke', function () {
     expect(r.statusCode).to.equal(200);
 
     let obj = jwt.verify(r.body.jwt, public_key);
+    expect(r.get('x-jwt-iss')).to.equal(obj.iss);
     expect(obj.sub).to.equal(apiKey);
     expect(obj).to.have.property("iat");
     expect(obj).to.have.property("exp");

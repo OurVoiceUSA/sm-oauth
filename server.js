@@ -231,8 +231,9 @@ if (!ovi_config.DEBUG && ovi_config.ip_header) {
   });
 }
 
-// store return URL in session
+// always set the jwt iss header
 app.use(function (req, res, next) {
+  res.set('x-jwt-iss', ovi_config.jwt_iss);
   return next();
 });
 

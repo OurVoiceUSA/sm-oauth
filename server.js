@@ -149,6 +149,7 @@ function wslog(req, ws, log) {
 // Redirect user back to the mobile app using Linking with a custom protocol OAuthLogin
 function oauthredir(req, res, type) {
   req.user.sub = req.user.id; // the jwt "subject" is the userid
+  req.user.device = req.session.device;
   var u = JSON.stringify(req.user);
   rc.lpush('jwt:'+req.user.id, u);
   wslog(req, 'oauthredir', {user_id: req.user.id, type: type});
@@ -248,9 +249,13 @@ app.post('/auth/jwt', issueJWT);
 app.get('/auth/pubkey', pubkey);
 app.get('/auth/dm', passport.authenticate('dropbox-oauth2', { callbackURL: ovi_config.wsbase+'/auth/dm/callback' }));
 app.get('/auth/dw', passport.authenticate('dropbox-oauth2', { callbackURL: ovi_config.wsbase+'/auth/dw/callback' }));
-app.get('/auth/fm', passport.authenticate('facebook', { callbackURL: ovi_config.wsbase+'/auth/fm/callback', scope: ['email']} ));
+app.get('/auth/fm', function(req, res, next) {
+  req.session.device = req.query.device;
+  passport.authenticate('facebook', { callbackURL: ovi_config.wsbase+'/auth/fm/callback', scope: ['email'] }
+  )(req, res, next)});
 // google accepts the custom loginHint
 app.get('/auth/gm', function(req, res, next) {
+  req.session.device = req.query.device;
   passport.authenticate('google', { loginHint: req.query.loginHint, callbackURL: ovi_config.wsbase+'/auth/gm/callback', scope: ['profile', 'email'] }
   )(req, res, next)});
 app.get('/auth/dm/callback', passport.authenticate('dropbox-oauth2', { callbackURL: ovi_config.wsbase+'/auth/dm/callback' }), dboxoauth);

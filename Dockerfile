@@ -7,6 +7,7 @@ COPY .babelrc .
 COPY package.json .
 COPY package-lock.json .
 RUN npm install
+RUN mkdir /app/node_modules/.cache && chown node:node /app/node_modules/.cache
 # fix dropbox oauth2 bug
 RUN cp node_modules/passport-dropbox/lib/index.js node_modules/passport-dropbox-oauth2/lib/passport-dropbox-oauth2/index.js
 

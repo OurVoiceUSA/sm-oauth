@@ -4,14 +4,19 @@ var supertest = require('supertest');
 var jwt = require('jsonwebtoken');
 var api = supertest('http://localhost:8080');
 var keypair = require('keypair');
+var fs = require('fs');
 
-var pair;
+var pair = {};
 var public_key;
 
 describe('API smoke', function () {
 
   before(async () => {
-    pair = keypair();
+    // just use a static key to save time if we're debugging
+    if (process.env.DEBUG)
+      pair.public = fs.readFileSync('./test/debug.pub');
+    else
+      pair = keypair();
   });
 
   it('poke 200', async () => {

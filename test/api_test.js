@@ -2,7 +2,7 @@
 var expect = require('chai').expect;
 var supertest = require('supertest');
 var jwt = require('jsonwebtoken');
-var api = supertest('http://localhost:8080');
+var api = supertest((process.env.WSBASE?process.env.WSBASE:'http://localhost:8080'));
 var keypair = require('keypair');
 var fs = require('fs');
 

@@ -28,8 +28,8 @@ Start by configuring an `.env` file:
 
 Then, run the following steps:
 
-* Generate an RSA keypair: `npm run genkeys`
 * Install dependancies: `npm install`
+* Generate an RSA keypair: `npm run genkeys`
 * Source in the configuration: `source .env`
 * Start the application: `npm start`
 

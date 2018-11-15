@@ -4,11 +4,11 @@ Our Voice USA is a 501(c)(3) non-profit, non-partisian organization for civic ed
 
 ## Features
 
-This is the oauth server for our back-end services. It does social media authentication and returns a JWT.
+This is the oauth server for our back-end services. It does social media authentication and returns a JWT signed by a RSA keypair.
 
 ## Development Setup
 
-Start by configuring the `.env` file:
+Start by configuring an `.env` file:
 
     cat << EOF > .env
     export REDIS_HOST=localhost
@@ -21,10 +21,19 @@ Start by configuring the `.env` file:
     export OAUTH_DROPBOX_CLIENTID=<YOUR ID>
     export OAUTH_DROPBOX_SECRET=<YOUR SECRET>
     export TOKEN_DISCLAIMER="Link to your website terms of use here"
+    export JWT_PUB_KEY=./rsa.pub
+    export JWT_PRV_KEY=./rsa.key
     export DEBUG=1
     EOF
 
-Then, install dependancies with `npm install`, source in the configuration with `source .env`, and start with `npm start`.
+Then, run the following steps:
+
+* Generate an RSA keypair: `npm run genkeys`
+* Install dependancies: `npm install`
+* Source in the configuration: `source .env`
+* Start the application: `npm start`
+
+When deploying to production, be sure to properly protect your RSA keypair.
 
 **NOTE:** At the time of this writing, the tool versions are as follows:
 

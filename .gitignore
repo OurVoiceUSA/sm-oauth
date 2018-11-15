@@ -59,3 +59,7 @@ buck-out/
 fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots
+
+# rsa keys
+rsa.pub
+rsa.key

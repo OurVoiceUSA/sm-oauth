@@ -13,20 +13,23 @@ import passport from 'passport';
 import FacebookStrategy from 'passport-facebook';
 import GoogleStrategy from 'passport-google-oauth20';
 import DropboxOAuth2Strategy from 'passport-dropbox-oauth2';
+import * as secrets from "docker-secrets-nodejs";
+
+secrets.setupSecretsDir();
 
 const ovi_config = {
-  server_port: ( process.env.SERVER_PORT ? process.env.SERVER_PORT : 8080 ),
-  wsbase: ( process.env.WSBASE ? process.env.WSBASE : 'http://localhost:8080' ),
-  ip_header: ( process.env.CLIENT_IP_HEADER ? process.env.CLIENT_IP_HEADER : null ),
-  redis_host: ( process.env.REDIS_HOST ? process.env.REDIS_HOST : 'localhost' ),
-  redis_port: ( process.env.REDIS_PORT ? process.env.REDIS_PORT : 6379 ),
-  session_secret: ( process.env.SESSION_SECRET ? process.env.SESSION_SECRET : crypto.randomBytes(48).toString('hex') ),
-  jwt_pub_key: ( process.env.JWT_PUB_KEY ? process.env.JWT_PUB_KEY : missingConfig("JWT_PUB_KEY") ),
-  jwt_prv_key: ( process.env.JWT_PRV_KEY ? process.env.JWT_PRV_KEY : missingConfig("JWT_PRV_KEY") ),
-  jwt_iss: ( process.env.JWT_ISS ? process.env.JWT_ISS : 'example.com' ),
-  jwt_token_test: ( process.env.JWT_TOKEN_TEST ? true : false ),
-  token_disclaimer: ( process.env.TOKEN_DISCLAIMER ? process.env.TOKEN_DISCLAIMER : missingConfig("TOKEN_DISCLAIMER") ),
-  DEBUG: ( process.env.DEBUG ? true : false ),
+  server_port: getConfig("server_port", false, 8080),
+  wsbase: getConfig("wsbase", false, 'http://localhost:8080'),
+  ip_header: getConfig("client_ip_header", false, null),
+  redis_host: getConfig("redis_host", false, 'localhost'),
+  redis_port: getConfig("redis_port", false, 6379),
+  session_secret: getConfig("session_secret", false, crypto.randomBytes(48).toString('hex')),
+  jwt_pub_key: getConfig("jwt_pub_key", true, null),
+  jwt_prv_key: getConfig("jwt_prv_key", true, null),
+  jwt_iss: getConfig("jwt_iss", false, 'example.com'),
+  jwt_token_test: getConfig("jwt_token_test", false, false),
+  token_disclaimer: getConfig("token_disclaimer", true, null),
+  DEBUG: getConfig("debug", false, false),
 };
 
 var public_key = fs.readFileSync(ovi_config.jwt_pub_key);
@@ -36,23 +39,23 @@ var private_key = fs.readFileSync(ovi_config.jwt_prv_key);
 jwt.verify(jwt.sign({test: true}, private_key, {algorithm: 'RS256'}), public_key);
 
 const passport_facebook = {
-  clientID: ( process.env.OAUTH_FACEBOOK_CLIENTID ? process.env.OAUTH_FACEBOOK_CLIENTID : missingConfig("OAUTH_FACEBOOK_CLIENTID") ),
-  clientSecret: ( process.env.OAUTH_FACEBOOK_SECRET ? process.env.OAUTH_FACEBOOK_SECRET : missingConfig("OAUTH_FACEBOOK_SECRET") ),
+  clientID: getConfig("oauth_facebook_clientid", true, null),
+  clientSecret: getConfig("oauth_facebook_secret", true, null),
   enableProof: true,
   state: true,
   profileFields: ['id', 'name', 'displayName', 'picture', 'emails'],
 };
 
 const passport_google = {
-  clientID: ( process.env.OAUTH_GOOGLE_CLIENTID ? process.env.OAUTH_GOOGLE_CLIENTID : missingConfig("OAUTH_GOOGLE_CLIENTID") ),
-  clientSecret: ( process.env.OAUTH_GOOGLE_SECRET ? process.env.OAUTH_GOOGLE_SECRET : missingConfig("OAUTH_GOOGLE_SECRET") ),
+  clientID: getConfig("oauth_google_clientid", true, null),
+  clientSecret: getConfig("oauth_google_secret", true, null),
   state: true,
 };
 
 const passport_dropbox = {
   apiVersion: '2',
-  clientID: ( process.env.OAUTH_DROPBOX_CLIENTID ? process.env.OAUTH_DROPBOX_CLIENTID : missingConfig("OAUTH_DROPBOX_CLIENTID") ),
-  clientSecret: ( process.env.OAUTH_DROPBOX_SECRET ? process.env.OAUTH_DROPBOX_SECRET : missingConfig("OAUTH_DROPBOX_SECRET") ),
+  clientID: getConfig("oauth_dropbox_clientid", true, null),
+  clientSecret: getConfig("oauth_dropbox_secret", true, null),
   state: true,
 };
 
@@ -123,10 +126,18 @@ rc.on('connect', async function() {
     console.log('Connected to redis at host "'+ovi_config.redis_host+'"');
 });
 
-function missingConfig(item) {
-  let msg = "Missing config: "+item;
-  console.log(msg);
-  throw msg;
+function getConfig(item, required, def) {
+  let value = secrets.get(item);
+  if (!value) {
+    if (required) {
+      let msg = "Missing config: "+item.toUpperCase();
+      console.log(msg);
+      throw msg;
+    } else {
+      return def;
+    }
+  }
+  return value;
 }
 
 function getClientIP(req) {

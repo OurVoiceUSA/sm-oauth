@@ -26,7 +26,7 @@ Start by configuring an `.env` file:
     export DEBUG=1
     EOF
 
-NOTE: Not all the `OAUTH_` properties are required; the various oauth strategies only loaded if the config for them is set.
+**NOTE**: Not all the `OAUTH_` properties are required; the various oauth strategies only loaded if the config for them is set.
 
 Then, run the following steps:
 
@@ -35,7 +35,7 @@ Then, run the following steps:
 * Source in the configuration: `source .env`
 * Start the application: `npm start`
 
-When deploying to production, be sure to properly protect your RSA keypair.
+When deploying to production, be sure to properly protect your RSA keypair and OAUTH properties.
 
 **NOTE:** At the time of this writing, the tool versions are as follows:
 

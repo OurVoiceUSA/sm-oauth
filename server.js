@@ -15,8 +15,6 @@ import GoogleStrategy from 'passport-google-oauth20';
 import DropboxOAuth2Strategy from 'passport-dropbox-oauth2';
 import * as secrets from "docker-secrets-nodejs";
 
-secrets.setupSecretsDir();
-
 const ovi_config = {
   server_port: getConfig("server_port", false, 8080),
   wsbase: getConfig("wsbase", false, 'http://localhost:8080'),

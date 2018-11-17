@@ -36,25 +36,27 @@ var private_key = fs.readFileSync(ovi_config.jwt_prv_key);
 // verify public and private keys match
 jwt.verify(jwt.sign({test: true}, private_key, {algorithm: 'RS256'}), public_key);
 
+// standardize the various passport strategies
+
 const passport_facebook = {
-  clientID: getConfig("oauth_facebook_clientid", true, null),
-  clientSecret: getConfig("oauth_facebook_secret", true, null),
+  clientID: getConfig("oauth_facebook_clientid", false, null),
+  clientSecret: getConfig("oauth_facebook_secret", false, null),
   enableProof: true,
   state: true,
   profileFields: ['id', 'name', 'displayName', 'picture', 'emails'],
 };
 
 const passport_google = {
-  clientID: getConfig("oauth_google_clientid", true, null),
-  clientSecret: getConfig("oauth_google_secret", true, null),
+  clientID: getConfig("oauth_google_clientid", false, null),
+  clientSecret: getConfig("oauth_google_secret", false, null),
   state: true,
 };
 
 const passport_dropbox = {
-  apiVersion: '2',
-  clientID: getConfig("oauth_dropbox_clientid", true, null),
-  clientSecret: getConfig("oauth_dropbox_secret", true, null),
+  clientID: getConfig("oauth_dropbox_clientid", false, null),
+  clientSecret: getConfig("oauth_dropbox_secret", false, null),
   state: true,
+  apiVersion: '2',
 };
 
 // Transform Facebook profile because Facebook and Google profile objects look different
@@ -81,27 +83,6 @@ const transformGoogleProfile = (profile) => ({
   exp: Math.floor(new Date().getTime() / 1000)+604800,
   disclaimer: ovi_config.token_disclaimer,
 });
-
-// Register Facebook Passport strategy
-passport.use(new FacebookStrategy(passport_facebook,
-  async (accessToken, refreshToken, profile, done)
-    => done(null, transformFacebookProfile(profile._json))
-));
-
-// Register Google Passport strategy
-passport.use(new GoogleStrategy(passport_google,
-  async (accessToken, refreshToken, profile, done)
-    => done(null, transformGoogleProfile(profile._json))
-));
-
-// Register Dropbox Passport strategy
-passport.use(new DropboxOAuth2Strategy(passport_dropbox,
-  function(accessToken, refreshToken, profile, done) {
-    // pass the accessToken along with the user object
-    profile._json.accessToken = accessToken;
-    return done(null, profile._json);
-  }
-));
 
 // Serialize user into the sessions
 passport.serializeUser((user, done) => done(null, user));
@@ -256,21 +237,43 @@ app.get('/poke', poke);
 // Set up auth routes
 app.post('/auth/jwt', issueJWT);
 app.get('/auth/pubkey', pubkey);
-app.get('/auth/dm', passport.authenticate('dropbox-oauth2', { callbackURL: ovi_config.wsbase+'/auth/dm/callback' }));
-app.get('/auth/dw', passport.authenticate('dropbox-oauth2', { callbackURL: ovi_config.wsbase+'/auth/dw/callback' }));
-app.get('/auth/fm', function(req, res, next) {
-  req.session.device = req.query.device;
-  passport.authenticate('facebook', { callbackURL: ovi_config.wsbase+'/auth/fm/callback', scope: ['email'] }
-  )(req, res, next)});
-// google accepts the custom loginHint
-app.get('/auth/gm', function(req, res, next) {
-  req.session.device = req.query.device;
-  passport.authenticate('google', { loginHint: req.query.loginHint, callbackURL: ovi_config.wsbase+'/auth/gm/callback', scope: ['profile', 'email'] }
-  )(req, res, next)});
-app.get('/auth/dm/callback', passport.authenticate('dropbox-oauth2', { callbackURL: ovi_config.wsbase+'/auth/dm/callback' }), dboxoauth);
-//app.get('/auth/dw/callback', passport.authenticate('dropbox-oauth2', { callbackURL: ovi_config.wsbase+'/auth/dw/callback' }), dboxweboauth);
-app.get('/auth/fm/callback', passport.authenticate('facebook', { callbackURL: ovi_config.wsbase+'/auth/fm/callback', failureRedirect: '/auth/fm' }), moauthredir);
-app.get('/auth/gm/callback', passport.authenticate('google',   { callbackURL: ovi_config.wsbase+'/auth/gm/callback', failureRedirect: '/auth/gm' }), moauthredir);
+// Register Dropbox Passport strategy
+
+if (passport_facebook.clientID && passport_facebook.clientSecret) {
+  passport.use(new FacebookStrategy(passport_facebook,
+    async (accessToken, refreshToken, profile, done)
+      => done(null, transformFacebookProfile(profile._json))
+  ));
+  app.get('/auth/fm', function(req, res, next) {
+    req.session.device = req.query.device;
+    passport.authenticate('facebook', { callbackURL: ovi_config.wsbase+'/auth/fm/callback', scope: ['email'] }
+    )(req, res, next)});
+  app.get('/auth/fm/callback', passport.authenticate('facebook', { callbackURL: ovi_config.wsbase+'/auth/fm/callback', failureRedirect: '/auth/fm' }), moauthredir);
+}
+
+if (passport_google.clientID && passport_google.clientSecret) {
+  passport.use(new GoogleStrategy(passport_google,
+    async (accessToken, refreshToken, profile, done)
+      => done(null, transformGoogleProfile(profile._json))
+  ));
+  app.get('/auth/gm', function(req, res, next) {
+    req.session.device = req.query.device;
+    passport.authenticate('google', { loginHint: req.query.loginHint, callbackURL: ovi_config.wsbase+'/auth/gm/callback', scope: ['profile', 'email'] }
+    )(req, res, next)});
+  app.get('/auth/gm/callback', passport.authenticate('google',   { callbackURL: ovi_config.wsbase+'/auth/gm/callback', failureRedirect: '/auth/gm' }), moauthredir);
+}
+
+if (passport_dropbox.clientID && passport_dropbox.clientSecret) {
+  passport.use(new DropboxOAuth2Strategy(passport_dropbox,
+    function(accessToken, refreshToken, profile, done) {
+      profile._json.accessToken = accessToken;
+      return done(null, profile._json);
+    }
+  ));
+  app.get('/auth/dm', passport.authenticate('dropbox-oauth2', { callbackURL: ovi_config.wsbase+'/auth/dm/callback' }));
+  app.get('/auth/dm/callback', passport.authenticate('dropbox-oauth2', { callbackURL: ovi_config.wsbase+'/auth/dm/callback' }), dboxoauth);
+}
+
 if (ovi_config.jwt_token_test)
   app.get('/auth/tokentest', tokentest);
 

@@ -26,6 +26,8 @@ Start by configuring an `.env` file:
     export DEBUG=1
     EOF
 
+NOTE: Not all the `OAUTH_` properties are required; the various oauth strategies only loaded if the config for them is set.
+
 Then, run the following steps:
 
 * Install dependancies: `npm install`

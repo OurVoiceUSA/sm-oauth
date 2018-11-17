@@ -273,7 +273,7 @@ app.get('/auth/dm/callback', passport.authenticate('dropbox-oauth2', { callbackU
 //app.get('/auth/dw/callback', passport.authenticate('dropbox-oauth2', { callbackURL: ovi_config.wsbase+'/auth/dw/callback' }), dboxweboauth);
 app.get('/auth/fm/callback', passport.authenticate('facebook', { callbackURL: ovi_config.wsbase+'/auth/fm/callback', failureRedirect: '/auth/fm' }), moauthredir);
 app.get('/auth/gm/callback', passport.authenticate('google',   { callbackURL: ovi_config.wsbase+'/auth/gm/callback', failureRedirect: '/auth/gm' }), moauthredir);
-if (ovi_config.jwt_token_test === true)
+if (ovi_config.jwt_token_test)
   app.get('/auth/tokentest', tokentest);
 
 // Launch the server

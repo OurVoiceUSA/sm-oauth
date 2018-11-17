@@ -277,6 +277,10 @@ if (passport_dropbox.clientID && passport_dropbox.clientSecret) {
 if (ovi_config.jwt_token_test)
   app.get('/auth/tokentest', tokentest);
 
+Object.keys(ovi_config).forEach((k) => {
+  delete process.env[k.toUpperCase()];
+});
+
 // Launch the server
 const server = app.listen(ovi_config.server_port, () => {
   const { address, port } = server.address();

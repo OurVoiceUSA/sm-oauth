@@ -148,7 +148,8 @@ function oauthredir(req, res, type) {
 
 function moauthredir(req, res) {
   var u = oauthredir(req, res, 'mobile');
-  res.redirect('OurVoiceApp://login?jwt=' + jwt.sign(u, private_key, {algorithm: 'RS256'}));
+  //res.redirect('OurVoiceApp://login?jwt=' + jwt.sign(u, private_key, {algorithm: 'RS256'}));
+  res.redirect('http://192.168.0.248:3000/jwt/' + jwt.sign(u, private_key, {algorithm: 'RS256'}));
 }
 
 function dboxoauth(req, res) {

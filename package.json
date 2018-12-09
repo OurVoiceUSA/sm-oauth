@@ -19,10 +19,10 @@
     "supertest": "^3.3.0"
   },
   "dependencies": {
-    "@babel/cli": "^7.1.5",
-    "@babel/core": "^7.1.6",
-    "@babel/node": "^7.0.0",
-    "@babel/preset-env": "^7.1.6",
+    "@babel/cli": "^7.2.0",
+    "@babel/core": "^7.2.0",
+    "@babel/node": "^7.2.0",
+    "@babel/preset-env": "^7.2.0",
     "body-parser": "^1.18.3",
     "connect-redis": "^3.4.0",
     "cors": "^2.8.5",

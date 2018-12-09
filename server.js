@@ -18,6 +18,7 @@ import * as secrets from "docker-secrets-nodejs";
 const ovi_config = {
   server_port: getConfig("server_port", false, 8080),
   wsbase: getConfig("wsbase", false, 'http://localhost:8080'),
+  wabase: getConfig("wabase", false, 'http://localhost:3000'),
   ip_header: getConfig("client_ip_header", false, null),
   redis_host: getConfig("redis_host", false, 'localhost'),
   redis_port: getConfig("redis_port", false, 6379),
@@ -147,20 +148,22 @@ function oauthredir(req, res, type) {
 }
 
 function moauthredir(req, res) {
-  var u = oauthredir(req, res, 'mobile');
-  //res.redirect('OurVoiceApp://login?jwt=' + jwt.sign(u, private_key, {algorithm: 'RS256'}));
-  res.redirect('http://192.168.0.248:3000/jwt/' + jwt.sign(u, private_key, {algorithm: 'RS256'}));
+  let context;
+  let redir = ovi_config.wabase;
+  if (req.session.app) {
+    context = 'web';
+    redir += '/'+req.session.app+'/jwt/';
+  } else {
+    context = 'mobile';
+    redir = 'OurVoiceApp://login?jwt=';
+  }
+  var u = oauthredir(req, res, context);
+  res.redirect(redir + jwt.sign(u, private_key, {algorithm: 'RS256'}));
 }
 
 function dboxoauth(req, res) {
   res.redirect('OurVoiceApp://login?dropbox=' + jwt.sign(req.user, private_key, {algorithm: 'RS256'}));
 }
-
-/*
-function dboxweboauth(req, res) {
-  res.redirect(req.session.returnTo + '?dropbox=' + jwt.sign(req.user, private_key, {algorithm: 'RS256'}));
-}
-*/
 
 function issueJWT(req, res) {
   if (!req.body.apiKey) return res.sendStatus(401);
@@ -229,6 +232,7 @@ if (!ovi_config.DEBUG && ovi_config.ip_header) {
 // always set the jwt iss header
 app.use(function (req, res, next) {
   res.set('x-jwt-iss', ovi_config.jwt_iss);
+  if (req.query.app) req.session.app = req.query.app;
   return next();
 });
 

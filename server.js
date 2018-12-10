@@ -152,7 +152,7 @@ function moauthredir(req, res) {
   let redir = ovi_config.wabase;
   if (req.session.app) {
     context = 'web';
-    redir += '/'+req.session.app+'/jwt/';
+    redir += '/'+req.session.app+'/#/jwt/';
   } else {
     context = 'mobile';
     redir = 'OurVoiceApp://login?jwt=';

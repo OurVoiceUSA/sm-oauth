@@ -10,6 +10,7 @@ import redis from 'redis';
 import jwt from 'jsonwebtoken';
 import bodyParser from 'body-parser';
 import passport from 'passport';
+import Auth0Strategy from 'passport-auth0';
 import FacebookStrategy from 'passport-facebook';
 import GoogleStrategy from 'passport-google-oauth20';
 import DropboxOAuth2Strategy from 'passport-dropbox-oauth2';
@@ -39,6 +40,13 @@ jwt.verify(jwt.sign({test: true}, private_key, {algorithm: 'RS256'}), public_key
 
 // standardize the various passport strategies
 
+const passport_auth0 = {
+   domain: getConfig("oauth_auth0_domain", false, null),
+   clientID: getConfig("oauth_auth0_clientid", false, null),
+   clientSecret: getConfig("oauth_auth0_secret", false, null),
+   callbackURL: ovi_config.wsbase+'/auth/auth0/callback',
+};
+
 const passport_facebook = {
   clientID: getConfig("oauth_facebook_clientid", false, null),
   clientSecret: getConfig("oauth_facebook_secret", false, null),
@@ -59,6 +67,18 @@ const passport_dropbox = {
   state: true,
   apiVersion: '2',
 };
+
+// auth0 transformation
+const transformAuth0Profile = (profile) => ({
+  id: 'auth0:' + profile.sub,
+  name: profile.name,
+  email: profile.email,
+  avatar: profile.picture,
+  iss: ovi_config.jwt_iss,
+  iat: Math.floor(new Date().getTime() / 1000),
+  exp: Math.floor(new Date().getTime() / 1000)+604800,
+  disclaimer: ovi_config.token_disclaimer,
+});
 
 // Transform Facebook profile because Facebook and Google profile objects look different
 // and we want to transform them into user objects that have the same set of attributes
@@ -243,6 +263,18 @@ app.get('/poke', poke);
 app.post('/auth/jwt', issueJWT);
 app.get('/auth/pubkey', pubkey);
 // Register Dropbox Passport strategy
+
+if (passport_auth0.clientID && passport_auth0.clientSecret && passport_auth0.domain) {
+  passport.use(new Auth0Strategy(passport_auth0,
+    async (accessToken, refreshToken, profile, done)
+      => done(null, transformAuth0Profile(profile._json))
+  ));
+  app.get('/auth/auth0', function(req, res, next) {
+    req.session.device = req.query.device;
+    passport.authenticate('auth0', { callbackURL: ovi_config.wsbase+'/auth/auth0/callback' }
+    )(req, res, next)});
+  app.get('/auth/auth0/callback', passport.authenticate('auth0', { failureRedirect: '/auth/auth0' }), moauthredir);
+}
 
 if (passport_facebook.clientID && passport_facebook.clientSecret) {
   passport.use(new FacebookStrategy(passport_facebook,

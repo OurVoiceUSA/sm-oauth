@@ -95,10 +95,10 @@ const transformFacebookProfile = (profile) => ({
 
 // Transform Google profile into user object
 const transformGoogleProfile = (profile) => ({
-  id: 'google:' + profile.id,
-  name: profile.displayName,
-  email: (profile.emails[0].value?profile.emails[0].value:''),
-  avatar: (profile.image.url?profile.image.url:''),
+  id: 'google:' + profile.sub,
+  name: profile.name,
+  email: profile.email,
+  avatar: profile.picture,
   iss: ovi_config.jwt_iss,
   iat: Math.floor(new Date().getTime() / 1000),
   exp: Math.floor(new Date().getTime() / 1000)+604800,
@@ -266,8 +266,7 @@ app.get('/auth/pubkey', pubkey);
 
 if (passport_auth0.clientID && passport_auth0.clientSecret && passport_auth0.domain) {
   passport.use(new Auth0Strategy(passport_auth0,
-    async (accessToken, refreshToken, profile, done)
-      => done(null, transformAuth0Profile(profile._json))
+    async (accessToken, refreshToken, profile, done) => done(null, transformAuth0Profile(profile._json))
   ));
   app.get('/auth/auth0', function(req, res, next) {
     req.session.device = req.query.device;
@@ -278,8 +277,7 @@ if (passport_auth0.clientID && passport_auth0.clientSecret && passport_auth0.dom
 
 if (passport_facebook.clientID && passport_facebook.clientSecret) {
   passport.use(new FacebookStrategy(passport_facebook,
-    async (accessToken, refreshToken, profile, done)
-      => done(null, transformFacebookProfile(profile._json))
+    async (accessToken, refreshToken, profile, done) => done(null, transformFacebookProfile(profile._json))
   ));
   app.get('/auth/fm', function(req, res, next) {
     req.session.device = req.query.device;
@@ -290,8 +288,7 @@ if (passport_facebook.clientID && passport_facebook.clientSecret) {
 
 if (passport_google.clientID && passport_google.clientSecret) {
   passport.use(new GoogleStrategy(passport_google,
-    async (accessToken, refreshToken, profile, done)
-      => done(null, transformGoogleProfile(profile._json))
+    async (accessToken, refreshToken, profile, done) => done(null, transformGoogleProfile(profile._json))
   ));
   app.get('/auth/gm', function(req, res, next) {
     req.session.device = req.query.device;

@@ -19,9 +19,6 @@ COPY poke.js .
 HEALTHCHECK --interval=15s --timeout=5s --start-period=5s CMD node /app/poke.js
 COPY server.js .
 
-# scrub busybox and npm
-RUN rm -rf /bin/busybox /usr/local/lib/node_modules/
-
 EXPOSE 8080
 USER node
 

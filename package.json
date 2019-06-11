@@ -5,12 +5,14 @@
   "main": "index.js",
   "scripts": {
     "genkeys": "node utils/genkeys.js",
-    "test": "JUNIT_REPORT_PATH=test-result/result.xml JUNIT_REPORT_STACK=1 mocha --timeout 25000 --colors --reporter mocha-jenkins-reporter || true",
+    "test": "JUNIT_REPORT_PATH=test-result/result.xml JUNIT_REPORT_STACK=1 mocha --require @babel/register --timeout 25000 --colors --reporter mocha-jenkins-reporter || true",
     "start": "node node_modules/nodemon/bin/nodemon.js --exec babel-node server.js"
   },
   "author": "Our Voice USA",
   "license": "AGPL-3.0",
   "devDependencies": {
+    "@babel/plugin-transform-runtime": "^7.4.4",
+    "@babel/register": "^7.4.4",
     "chai": "^4.2.0",
     "keypair": "^1.0.1",
     "mocha": "^6.1.4",
@@ -23,10 +25,12 @@
     "@babel/core": "^7.4.4",
     "@babel/node": "^7.2.2",
     "@babel/preset-env": "^7.4.4",
+    "@babel/runtime": "^7.4.5",
     "body-parser": "^1.19.0",
     "connect-redis": "^3.4.1",
     "cors": "^2.8.5",
     "docker-secrets-nodejs": "^1.0.5",
+    "dotenv": "^8.0.0",
     "express": "^4.16.4",
     "express-jwt": "^5.3.1",
     "express-logging": "^1.1.1",

@@ -4,7 +4,6 @@ import expressLogging from 'express-logging';
 import expressSession from 'express-session';
 import cors from 'cors';
 import fs from 'fs';
-import crypto from 'crypto';
 import logger from 'logops';
 import redis from 'redis';
 import jwt from 'jsonwebtoken';
@@ -14,26 +13,11 @@ import Auth0Strategy from 'passport-auth0';
 import FacebookStrategy from 'passport-facebook';
 import GoogleStrategy from 'passport-google-oauth20';
 import DropboxOAuth2Strategy from 'passport-dropbox-oauth2';
-import * as secrets from "docker-secrets-nodejs";
 
-const ovi_config = {
-  server_port: getConfig("server_port", false, 8080),
-  wsbase: getConfig("wsbase", false, 'http://localhost:8080'),
-  wabase: getConfig("wabase", false, 'http://localhost:3000'),
-  ip_header: getConfig("client_ip_header", false, null),
-  redis_host: getConfig("redis_host", false, 'localhost'),
-  redis_port: getConfig("redis_port", false, 6379),
-  session_secret: getConfig("session_secret", false, crypto.randomBytes(48).toString('hex')),
-  jwt_pub_key: getConfig("jwt_pub_key", true, null),
-  jwt_prv_key: getConfig("jwt_prv_key", true, null),
-  jwt_iss: getConfig("jwt_iss", false, 'example.com'),
-  jwt_token_test: getConfig("jwt_token_test", false, false),
-  token_disclaimer: getConfig("token_disclaimer", true, null),
-  DEBUG: getConfig("debug", false, false),
-};
+import { ov_config, getConfig } from './lib/ov_config';
 
-var public_key = fs.readFileSync(ovi_config.jwt_pub_key);
-var private_key = fs.readFileSync(ovi_config.jwt_prv_key);
+var public_key = fs.readFileSync(ov_config.jwt_pub_key);
+var private_key = fs.readFileSync(ov_config.jwt_prv_key);
 
 // verify public and private keys match
 jwt.verify(jwt.sign({test: true}, private_key, {algorithm: 'RS256'}), public_key);
@@ -44,7 +28,7 @@ const passport_auth0 = {
    domain: getConfig("oauth_auth0_domain", false, null),
    clientID: getConfig("oauth_auth0_clientid", false, null),
    clientSecret: getConfig("oauth_auth0_secret", false, null),
-   callbackURL: ovi_config.wsbase+'/auth/auth0/callback',
+   callbackURL: ov_config.wsbase+'/auth/auth0/callback',
 };
 
 const passport_facebook = {
@@ -74,10 +58,10 @@ const transformAuth0Profile = (profile) => ({
   name: profile.name,
   email: profile.email,
   avatar: profile.picture,
-  iss: ovi_config.jwt_iss,
+  iss: ov_config.jwt_iss,
   iat: Math.floor(new Date().getTime() / 1000),
   exp: Math.floor(new Date().getTime() / 1000)+604800,
-  disclaimer: ovi_config.token_disclaimer,
+  disclaimer: ov_config.token_disclaimer,
 });
 
 // Transform Facebook profile because Facebook and Google profile objects look different
@@ -87,10 +71,10 @@ const transformFacebookProfile = (profile) => ({
   name: profile.name,
   email: (profile.email?profile.email:''),
   avatar: (profile.picture.data.url?profile.picture.data.url:''),
-  iss: ovi_config.jwt_iss,
+  iss: ov_config.jwt_iss,
   iat: Math.floor(new Date().getTime() / 1000),
   exp: Math.floor(new Date().getTime() / 1000)+604800,
-  disclaimer: ovi_config.token_disclaimer,
+  disclaimer: ov_config.token_disclaimer,
 });
 
 // Transform Google profile into user object
@@ -99,10 +83,10 @@ const transformGoogleProfile = (profile) => ({
   name: profile.name,
   email: profile.email,
   avatar: profile.picture,
-  iss: ovi_config.jwt_iss,
+  iss: ov_config.jwt_iss,
   iat: Math.floor(new Date().getTime() / 1000),
   exp: Math.floor(new Date().getTime() / 1000)+604800,
-  disclaimer: ovi_config.token_disclaimer,
+  disclaimer: ov_config.token_disclaimer,
 });
 
 // Serialize user into the sessions
@@ -112,36 +96,22 @@ passport.serializeUser((user, done) => done(null, user));
 passport.deserializeUser((user, done) => done(null, user));
 
 // redis connection
-var rc = redis.createClient(ovi_config.redis_port, ovi_config.redis_host,
+var rc = redis.createClient(ov_config.redis_port, ov_config.redis_host,
   {
     // endlessly retry the database connection
     retry_strategy: function (options) {
-      console.log('redis connection failed to "'+ovi_config.redis_host+'", retrying: this is attempt # '+options.attempt);
+      console.log('redis connection failed to "'+ov_config.redis_host+'", retrying: this is attempt # '+options.attempt);
       return Math.min(options.attempt * 100, 3000);
     }
   }
 );
 
 rc.on('connect', async function() {
-    console.log('Connected to redis at host "'+ovi_config.redis_host+'"');
+    console.log('Connected to redis at host "'+ov_config.redis_host+'"');
 });
 
-function getConfig(item, required, def) {
-  let value = secrets.get(item);
-  if (!value) {
-    if (required) {
-      let msg = "Missing config: "+item.toUpperCase();
-      console.log(msg);
-      throw msg;
-    } else {
-      return def;
-    }
-  }
-  return value;
-}
-
 function getClientIP(req) {
-  if (ovi_config.ip_header) return req.header(ovi_config.ip_header);
+  if (ov_config.ip_header) return req.header(ov_config.ip_header);
   else return req.connection.remoteAddress;
 }
 
@@ -149,7 +119,7 @@ function wslog(req, ws, log) {
   log['client_ip'] = getClientIP(req);
   log['time'] = (new Date).getTime();
   let str = JSON.stringify(log);
-  if (ovi_config.DEBUG) console.log('DEBUG: '+ws+': '+str);
+  if (ov_config.DEBUG) console.log('DEBUG: '+ws+': '+str);
   try {
     rc.lpush('wslog:'+ws, str);
   } catch (error) {
@@ -169,7 +139,7 @@ function oauthredir(req, res, type) {
 
 function moauthredir(req, res) {
   let context;
-  let redir = ovi_config.wabase;
+  let redir = ov_config.wabase;
   if (req.session.app) {
     context = 'web';
     redir += '/'+req.session.app+'/#/jwt/';
@@ -192,10 +162,10 @@ function issueJWT(req, res) {
   wslog(req, 'jwt', {apiKey: req.body.apiKey});
   res.send({jwt: jwt.sign(JSON.stringify({
     sub: req.body.apiKey,
-    iss: ovi_config.jwt_iss,
+    iss: ov_config.jwt_iss,
     iat: Math.floor(new Date().getTime() / 1000),
     exp: Math.floor(new Date().getTime() / 1000)+60,
-    disclaimer: ovi_config.token_disclaimer,
+    disclaimer: ov_config.token_disclaimer,
   }), private_key, {algorithm: 'RS256'})});
 }
 
@@ -208,10 +178,10 @@ function tokentest(req, res) {
   res.send({jwt: jwt.sign(JSON.stringify({
     id: 'test:' + id,
     name: "Test User "+id,
-    iss: ovi_config.jwt_iss,
+    iss: ov_config.jwt_iss,
     iat: Math.floor(new Date().getTime() / 1000),
     exp: Math.floor(new Date().getTime() / 1000)+604800,
-    disclaimer: ovi_config.token_disclaimer,
+    disclaimer: ov_config.token_disclaimer,
   }), private_key, {algorithm: 'RS256'})});
 }
 
@@ -228,7 +198,7 @@ app.disable('x-powered-by');
 app.use(expressLogging(logger));
 app.use(expressSession({
     store: new connectRedis({client: rc}),
-    secret: ovi_config.session_secret,
+    secret: ov_config.session_secret,
     saveUninitialized: false,
     resave: false
 }));
@@ -239,10 +209,10 @@ app.use(cors());
 app.use(passport.initialize());
 
 // require ip_header if config for it is set
-if (!ovi_config.DEBUG && ovi_config.ip_header) {
+if (!ov_config.DEBUG && ov_config.ip_header) {
   app.use(function (req, res, next) {
-    if (!req.header(ovi_config.ip_header)) {
-      console.log('Connection without '+ovi_config.ip_header+' header');
+    if (!req.header(ov_config.ip_header)) {
+      console.log('Connection without '+ov_config.ip_header+' header');
       res.status(400).send();
     }
     else next();
@@ -251,7 +221,7 @@ if (!ovi_config.DEBUG && ovi_config.ip_header) {
 
 // always set the jwt iss header
 app.use(function (req, res, next) {
-  res.set('x-jwt-iss', ovi_config.jwt_iss);
+  res.set('x-jwt-iss', ov_config.jwt_iss);
   if (req.query.app) req.session.app = req.query.app;
   return next();
 });
@@ -270,7 +240,7 @@ if (passport_auth0.clientID && passport_auth0.clientSecret && passport_auth0.dom
   ));
   app.get('/auth/auth0', function(req, res, next) {
     req.session.device = req.query.device;
-    passport.authenticate('auth0', { callbackURL: ovi_config.wsbase+'/auth/auth0/callback' }
+    passport.authenticate('auth0', { callbackURL: ov_config.wsbase+'/auth/auth0/callback' }
     )(req, res, next)});
   app.get('/auth/auth0/callback', passport.authenticate('auth0', { failureRedirect: '/auth/auth0' }), moauthredir);
 }
@@ -281,9 +251,9 @@ if (passport_facebook.clientID && passport_facebook.clientSecret) {
   ));
   app.get('/auth/fm', function(req, res, next) {
     req.session.device = req.query.device;
-    passport.authenticate('facebook', { callbackURL: ovi_config.wsbase+'/auth/fm/callback', scope: ['email'] }
+    passport.authenticate('facebook', { callbackURL: ov_config.wsbase+'/auth/fm/callback', scope: ['email'] }
     )(req, res, next)});
-  app.get('/auth/fm/callback', passport.authenticate('facebook', { callbackURL: ovi_config.wsbase+'/auth/fm/callback', failureRedirect: '/auth/fm' }), moauthredir);
+  app.get('/auth/fm/callback', passport.authenticate('facebook', { callbackURL: ov_config.wsbase+'/auth/fm/callback', failureRedirect: '/auth/fm' }), moauthredir);
 }
 
 if (passport_google.clientID && passport_google.clientSecret) {
@@ -292,9 +262,9 @@ if (passport_google.clientID && passport_google.clientSecret) {
   ));
   app.get('/auth/gm', function(req, res, next) {
     req.session.device = req.query.device;
-    passport.authenticate('google', { loginHint: req.query.loginHint, callbackURL: ovi_config.wsbase+'/auth/gm/callback', scope: ['profile', 'email'] }
+    passport.authenticate('google', { loginHint: req.query.loginHint, callbackURL: ov_config.wsbase+'/auth/gm/callback', scope: ['profile', 'email'] }
     )(req, res, next)});
-  app.get('/auth/gm/callback', passport.authenticate('google',   { callbackURL: ovi_config.wsbase+'/auth/gm/callback', failureRedirect: '/auth/gm' }), moauthredir);
+  app.get('/auth/gm/callback', passport.authenticate('google',   { callbackURL: ov_config.wsbase+'/auth/gm/callback', failureRedirect: '/auth/gm' }), moauthredir);
 }
 
 if (passport_dropbox.clientID && passport_dropbox.clientSecret) {
@@ -304,19 +274,19 @@ if (passport_dropbox.clientID && passport_dropbox.clientSecret) {
       return done(null, profile._json);
     }
   ));
-  app.get('/auth/dm', passport.authenticate('dropbox-oauth2', { callbackURL: ovi_config.wsbase+'/auth/dm/callback' }));
-  app.get('/auth/dm/callback', passport.authenticate('dropbox-oauth2', { callbackURL: ovi_config.wsbase+'/auth/dm/callback' }), dboxoauth);
+  app.get('/auth/dm', passport.authenticate('dropbox-oauth2', { callbackURL: ov_config.wsbase+'/auth/dm/callback' }));
+  app.get('/auth/dm/callback', passport.authenticate('dropbox-oauth2', { callbackURL: ov_config.wsbase+'/auth/dm/callback' }), dboxoauth);
 }
 
-if (ovi_config.jwt_token_test)
+if (ov_config.jwt_token_test)
   app.get('/auth/tokentest', tokentest);
 
-Object.keys(ovi_config).forEach((k) => {
+Object.keys(ov_config).forEach((k) => {
   delete process.env[k.toUpperCase()];
 });
 require = null;
 
-if (!ovi_config.DEBUG) {
+if (!ov_config.DEBUG) {
   process.on('SIGUSR1', () => {
     //process.exit(1);
     throw "Caught SIGUSR1, exiting."
@@ -324,7 +294,7 @@ if (!ovi_config.DEBUG) {
 }
 
 // Launch the server
-const server = app.listen(ovi_config.server_port, () => {
+const server = app.listen(ov_config.server_port, () => {
   const { address, port } = server.address();
   console.log('sm-oauth express');
   console.log(`Listening at http://${address}:${port}`);

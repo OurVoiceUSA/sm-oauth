@@ -1,13 +1,16 @@
 
-var expect = require('chai').expect;
-var supertest = require('supertest');
-var jwt = require('jsonwebtoken');
-var api = supertest((process.env.WSBASE?process.env.WSBASE:'http://localhost:8080'));
-var keypair = require('keypair');
-var fs = require('fs');
+import { expect } from 'chai';
+import supertest from 'supertest';
+import jwt from 'jsonwebtoken';
+import keypair from 'keypair';
+import fs from 'fs';
+
+import { ov_config } from '../lib/ov_config';
 
 var pair = {};
 var public_key;
+
+var api = supertest(ov_config.wsbase);
 
 describe('API smoke', function () {
 
@@ -28,8 +31,8 @@ describe('API smoke', function () {
     const r = await api.get('/auth/pubkey');
     expect(r.statusCode).to.equal(200);
     public_key = r.body.toString();
-    expect(public_key).to.match(/BEGIN CERTIFICATE/);
-    expect(public_key).to.match(/END CERTIFICATE/);
+    expect(public_key).to.match(/BEGIN.*KEY/);
+    expect(public_key).to.match(/END.*KEY/);
   });
 
   it('/auth/jwt 401', async () => {

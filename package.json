@@ -17,6 +17,7 @@
     "mocha": "^6.1.4",
     "mocha-jenkins-reporter": "^0.4.1",
     "nodemon": "^1.19.1",
+    "redis-mock": "^0.44.0",
     "supertest": "^4.0.2"
   },
   "dependencies": {

@@ -1,5 +1,6 @@
 
 import { expect } from 'chai';
+import redis from 'redis-mock';
 import supertest from 'supertest';
 import jwt from 'jsonwebtoken';
 import keypair from 'keypair';
@@ -10,7 +11,7 @@ import { doExpressInit } from '../lib/express';
 var pair = {};
 var public_key;
 
-var app = doExpressInit();
+var app = doExpressInit(redis);
 var api = supertest(app);
 
 describe('API smoke', function () {

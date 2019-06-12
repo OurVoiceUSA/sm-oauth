@@ -5,12 +5,12 @@ import jwt from 'jsonwebtoken';
 import keypair from 'keypair';
 import fs from 'fs';
 
-import { ov_config } from '../lib/ov_config';
+import { doExpressInit } from '../lib/express';
 
 var pair = {};
 var public_key;
 
-var api = supertest(ov_config.wsbase);
+var api = supertest(doExpressInit());
 
 describe('API smoke', function () {
 
@@ -108,4 +108,3 @@ describe('API smoke', function () {
   });
 
 });
-

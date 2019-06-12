@@ -6,6 +6,7 @@ import jwt from 'jsonwebtoken';
 import keypair from 'keypair';
 import fs from 'fs';
 
+import { ov_config } from '../lib/ov_config';
 import { doExpressInit } from '../lib/express';
 
 var pair = {};
@@ -18,7 +19,7 @@ describe('API smoke', function () {
 
   before(async () => {
     // just use a static key to save time if we're debugging
-    if (process.env.DEBUG)
+    if (ov_config.DEBUG)
       pair.public = fs.readFileSync('./test/debug.pub');
     else
       pair = keypair();

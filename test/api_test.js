@@ -10,7 +10,8 @@ import { doExpressInit } from '../lib/express';
 var pair = {};
 var public_key;
 
-var api = supertest(doExpressInit());
+var app = doExpressInit();
+var api = supertest(app);
 
 describe('API smoke', function () {
 
@@ -20,6 +21,10 @@ describe('API smoke', function () {
       pair.public = fs.readFileSync('./test/debug.pub');
     else
       pair = keypair();
+  });
+
+  after(() => {
+    app.rc.quit();
   });
 
   it('poke 200', async () => {

@@ -6,7 +6,7 @@ import jwt from 'jsonwebtoken';
 import keypair from 'keypair';
 import fs from 'fs';
 
-import { ov_config } from '../lib/ov_config';
+import { ov_config, getConfig } from '../lib/ov_config';
 import { doExpressInit } from '../lib/express';
 
 var pair = {};
@@ -27,6 +27,15 @@ describe('API smoke', function () {
 
   after(() => {
     app.rc.quit();
+  });
+
+  it('getConfig negative test', () => {
+    let error = false;
+    try {
+      getConfig("blah", true, true);
+      error = true;
+    } catch (e) {}
+    expect(error).to.equal(false);
   });
 
   it('poke 200', async () => {

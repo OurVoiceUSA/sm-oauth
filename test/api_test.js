@@ -12,8 +12,15 @@ import { doExpressInit } from '../lib/express';
 var pair = {};
 var public_key;
 
-var app = doExpressInit(redis);
-var api = supertest(app);
+var app;
+var api;
+
+if (process.env.TEST_TARGET) {
+  api = supertest(process.env.TEST_TARGET);
+} else {
+  app = doExpressInit(redis);
+  api = supertest(app);
+}
 
 describe('API smoke', function () {
 
@@ -26,7 +33,7 @@ describe('API smoke', function () {
   });
 
   after(() => {
-    app.rc.quit();
+    if (app) app.rc.quit();
   });
 
   it('getConfig negative test', () => {

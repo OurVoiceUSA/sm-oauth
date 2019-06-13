@@ -18,7 +18,7 @@ var api;
 if (process.env.TEST_TARGET) {
   api = supertest(process.env.TEST_TARGET);
 } else {
-  app = doExpressInit(redis);
+  app = doExpressInit(false, redis);
   api = supertest(app);
 }
 

@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "genkeys": "node utils/genkeys.js",
-    "test": "JUNIT_REPORT_PATH=test-result/result.xml JUNIT_REPORT_STACK=1 mocha --require @babel/register --timeout 25000 --colors --reporter mocha-jenkins-reporter || true",
+    "test": "JUNIT_REPORT_PATH=test-result/result.xml JUNIT_REPORT_STACK=1 nyc mocha --require @babel/register --timeout 25000 --colors --reporter mocha-jenkins-reporter || true",
     "start": "node node_modules/nodemon/bin/nodemon.js --exec babel-node server.js"
   },
   "author": "Our Voice USA",
@@ -17,6 +17,7 @@
     "mocha": "^6.1.4",
     "mocha-jenkins-reporter": "^0.4.1",
     "nodemon": "^1.19.1",
+    "nyc": "^14.1.1",
     "redis-mock": "^0.44.0",
     "supertest": "^4.0.2"
   },

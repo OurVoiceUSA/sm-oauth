@@ -1,5 +1,8 @@
 FROM node:dubnium-alpine
 
+RUN apk update && apk upgrade && \
+    apk add --no-cache git
+
 RUN mkdir -p /app
 WORKDIR /app
 

@@ -42,6 +42,7 @@
     "jwt-decode": "^2.2.0",
     "logops": "^2.1.0",
     "node-fetch": "^2.6.0",
+    "ourvoiceusa-sdk-js": "github:OurVoiceUSA/ourvoiceusa-sdk-js",
     "passport": "^0.4.0",
     "passport-auth0": "^1.1.0",
     "passport-dropbox": "^2.0.0",

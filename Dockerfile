@@ -1,4 +1,4 @@
-FROM node:dubnium-alpine as build
+FROM node:erbium-alpine as build
 
 RUN apk update && apk upgrade && \
     apk add --no-cache git
@@ -12,7 +12,7 @@ COPY package-lock.json .
 
 RUN npm install
 
-FROM node:dubnium-alpine
+FROM node:erbium-alpine
 
 COPY --from=build /app /app
 WORKDIR /app

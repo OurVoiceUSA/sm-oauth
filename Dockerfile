@@ -17,9 +17,6 @@ FROM node:erbium-alpine
 COPY --from=build /app /app
 WORKDIR /app
 
-# fix dropbox oauth2 bug
-RUN cp node_modules/passport-dropbox/lib/index.js node_modules/passport-dropbox-oauth2/lib/passport-dropbox-oauth2/index.js
-
 ENV NODE_ENV=production
 ENV BABEL_CACHE_PATH=/tmp/.babel_cache
 ENV NO_UPDATE_NOTIFIER=1
